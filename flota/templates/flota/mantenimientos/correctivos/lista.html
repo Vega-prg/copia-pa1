@@ -1,15 +1,20 @@
 {% extends "flota/base.html" %}
 
-{% block title %}Mantenimientos Correctivos{% endblock %}
+{% block title %}Listado de Mantenimientos Correctivos{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
     <div class="card">
-        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-            <h4 class="mb-0"><i class="bi bi-wrench-adjustable-circle me-2"></i>Mantenimientos Correctivos</h4>
-            <a href="{% url 'registrar_mantenimiento_correctivo' %}" class="btn btn-light btn-sm">
-                <i class="bi bi-plus-circle me-1"></i> Nuevo
-            </a>
+        <div class="card-header bg-danger text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="bi bi-tools me-2"></i>
+                    Listado de Mantenimientos Correctivos
+                </h4>
+                <a href="{% url 'registrar_mantenimiento_correctivo' %}" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i> Nuevo Mantenimiento
+                </a>
+            </div>
         </div>
 
         <!-- Filtros -->
@@ -20,7 +25,9 @@
                     <select name="estado" id="estado" class="form-select">
                         <option value="">Todos</option>
                         {% for valor, etiqueta in estados_filtro %}
-                        <option value="{{ valor }}" {% if valor == estado_seleccionado %}selected{% endif %}>{{ etiqueta }}</option>
+                        <option value="{{ valor }}" {% if valor == estado_seleccionado %}selected{% endif %}>
+                            {{ etiqueta }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -35,31 +42,44 @@
             </form>
         </div>
 
-        <!-- Tabla -->
+        <!-- Tabla de mantenimientos -->
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover table-striped">
+                <table class="table table-hover table-striped align-middle">
                     <thead class="table-light">
                         <tr>
+                            <th>ID</th>
                             <th>Vehículo</th>
-                            <th>Prioridad</th>
+                            <th>Descripción de la falla</th>
+                            <th>Fecha reporte</th>
                             <th>Estado</th>
-                            <th>Fecha Reporte</th>
-                            <th>Usuario</th>
+                            <th>Prioridad</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for m in mantenimientos %}
                         <tr>
-                            <td>{{ m.vehiculo }}</td>
-                            <td>{{ m.prioridad_display }}</td>
-                            <td><span class="badge {{ m.estado_class }}">{{ m.estado_display }}</span></td>
+                            <td><strong>{{ m.id }}</strong></td>
+                            <td>{{ m.vehiculo.placa }}</td>
+                            <td>{{ m.descripcion_falla|truncatechars:50 }}</td>
                             <td>{{ m.fecha_reporte|date:"d/m/Y" }}</td>
-                            <td>{{ m.usuario_registro }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if m.estado == 'pendiente' %}bg-warning text-dark
+                                    {% elif m.estado == 'en_proceso' %}bg-info text-dark
+                                    {% elif m.estado == 'completado' %}bg-success
+                                    {% elif m.estado == 'cancelado' %}bg-secondary
+                                    {% else %}bg-light text-dark
+                                    {% endif %}
+                                ">
+                                    {{ m.get_estado_display }}
+                                </span>
+                            </td>
+                            <td>{{ m.get_prioridad_display }}</td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{% url 'detalle_mantenimiento_correctivo' m.id %}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{% url 'detalle_mantenimiento_correctivo' m.id %}" class="btn btn-sm btn-outline-primary" title="Ver detalle">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     <a href="{% url 'editar_mantenimiento_correctivo' m.id %}" class="btn btn-sm btn-warning">
@@ -69,17 +89,62 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="6" class="text-center text-muted">No hay registros</td></tr>
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="bi bi-tools" style="font-size: 2rem;"></i>
+                                <h5 class="mt-2">No se encontraron mantenimientos correctivos</h5>
+                                <p class="text-muted">
+                                    {% if estado_seleccionado %}Prueba con otro filtro{% else %}Registra tu primer mantenimiento{% endif %}
+                                </p>
+                                <a href="{% url 'registrar_mantenimiento_correctivo' %}" class="btn btn-danger mt-2">
+                                    <i class="bi bi-plus-circle me-1"></i> Registrar Mantenimiento
+                                </a>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
 
+            <!-- Paginación -->
             {% if is_paginated %}
-            <nav class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {# Igual a la plantilla anterior #}
-                    ...
+            <nav aria-label="Paginación">
+                <ul class="pagination justify-content-center mt-4">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
                 </ul>
             </nav>
             {% endif %}

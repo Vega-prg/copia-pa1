@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django import forms
 from .models import Vehiculo, MantenimientoPreventivo, MantenimientoCorrectivo
 from django.utils import timezone
@@ -147,6 +148,25 @@ class MantenimientoPreventivoForm(forms.ModelForm):
             'repuestos_utilizados': 'Repuestos/materiales utilizados',
         }
 
+    def clean_km_prox_mantenimiento(self):
+        km = self.cleaned_data.get('km_prox_mantenimiento')
+        if km is None or km < 1000:
+            raise ValidationError('El kilometraje del próximo mantenimiento debe ser de al menos 1000 km.')
+        return km
+
+    def clean_fecha_prox_mantenimiento(self):
+        fecha = self.cleaned_data.get('fecha_prox_mantenimiento')
+        hoy = timezone.now().date()
+        if fecha and fecha < hoy + timedelta(days=30):
+            raise ValidationError('La fecha del próximo mantenimiento debe ser al menos 1 mes después de hoy.')
+        return fecha
+
+    def clean_presupuesto(self):
+        presupuesto = self.cleaned_data.get('presupuesto')
+        if presupuesto is None or presupuesto <= 0:
+            raise ValidationError('El presupuesto debe ser mayor a 0.')
+        return presupuesto
+
 class MantenimientoCorrectivoForm(forms.ModelForm):
     class Meta:
         model = MantenimientoCorrectivo
@@ -174,7 +194,7 @@ class MantenimientoCorrectivoForm(forms.ModelForm):
             'presupuesto': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Ej: 250.00',
-                'step': '0.01'
+                'step': '0.1el '
             }),
             'estado': forms.Select(attrs={
                 'class': 'form-select'
@@ -184,8 +204,10 @@ class MantenimientoCorrectivoForm(forms.ModelForm):
             }),
             'fecha_solucion': forms.DateInput(attrs={
                 'class': 'form-control',
-                'type': 'date'
+                'type': 'date',
+                'min': timezone.now().date()
             }),
+
         }
         labels = {
             'descripcion_falla': 'Descripción de la falla',
@@ -193,3 +215,14 @@ class MantenimientoCorrectivoForm(forms.ModelForm):
             'repuestos_utilizados': 'Repuestos utilizados',
             'fecha_solucion': 'Fecha de solución',
         }
+    def clean_presupuesto(self):
+        presupuesto = self.cleaned_data.get('presupuesto')
+        if presupuesto is None or presupuesto <= 0:
+            raise ValidationError('El presupuesto debe ser mayor a 0.')
+        return presupuesto
+
+    def clean_fecha_solucion(self):
+        fecha = self.cleaned_data.get('fecha_solucion')
+        if fecha and fecha < timezone.now().date():
+            raise ValidationError('La fecha de solución no puede ser anterior a hoy.')
+        return fecha

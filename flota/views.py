@@ -97,6 +97,19 @@ BADGE_CLASSES = {
     'fuera_servicio': 'bg-danger'
 }
 
+ESTADOS_MANTENIMIENTO = [
+    ('pendiente', 'Pendiente'),
+    ('completado', 'Completado'),
+    ('cancelado', 'Cancelado'),
+]
+
+ESTADO_CHOICES = {
+    'pendiente': ('Pendiente', 'bg-warning'),     
+    'completado': ('Completado', 'bg-success'),  
+    'cancelado': ('Cancelado', 'bg-danger'),      
+    
+}
+
 @login_required
 def lista_vehiculos(request):
     estado = request.GET.get('estado')
@@ -162,10 +175,39 @@ def lista_mantenimientos(request):
 
 @login_required
 def lista_mantenimientos_preventivos(request):
-    mantenimientos = MantenimientoPreventivo.objects.all().order_by('-fecha_registro')
-    return render(request, 'flota/mantenimientos/preventivos/lista.html', {
-        'mantenimientos': mantenimientos
-    })
+    estado = request.GET.get('estado')
+    mantenimientos = MantenimientoPreventivo.objects.all()
+
+    if estado:
+        mantenimientos = mantenimientos.filter(estado=estado)
+
+    # Aquí defines el diccionario con las etiquetas y clases (si no lo tienes ya)
+    ESTADOS_MANTENIMIENTO = {
+        'pendiente': ('Pendiente', 'bg-warning'),
+        'completado': ('Completado', 'bg-success'),
+        'cancelado': ('Cancelado', 'bg-danger'),
+        # Agrega otros estados que uses...
+    }
+
+    # Asignar propiedades para mostrar el estado con color
+    for m in mantenimientos:
+        label, css_class = ESTADOS_MANTENIMIENTO.get(m.estado, ('Desconocido', 'bg-secondary'))
+        m.estado_display = label
+        m.estado_class = css_class
+
+    # Paginación
+    paginator = Paginator(mantenimientos, 10)  # 10 por página
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'mantenimientos': page_obj.object_list,
+        'page_obj': page_obj,
+        'is_paginated': page_obj.has_other_pages(),
+        'estados_filtro': [(k, v[0]) for k, v in ESTADOS_MANTENIMIENTO.items()],
+        'estado_seleccionado': estado,
+    }
+    return render(request, 'flota/mantenimientos/preventivos/lista.html', context)
 
 @login_required
 def registrar_mantenimiento_preventivo(request):
@@ -216,10 +258,28 @@ def editar_mantenimiento_preventivo(request, pk):
 
 @login_required
 def lista_mantenimientos_correctivos(request):
-    mantenimientos = MantenimientoCorrectivo.objects.all().order_by('-fecha_reporte')
-    return render(request, 'flota/mantenimientos/correctivos/lista.html', {
-        'mantenimientos': mantenimientos
-    })
+    estado = request.GET.get('estado')  
+    mantenimientos = MantenimientoCorrectivo.objects.all()
+    
+    if estado:
+        mantenimientos = mantenimientos.filter(estado=estado)
+    
+    mantenimientos = mantenimientos.order_by('-fecha_reporte')
+    
+    ESTADOS_CORRECTIVOS = [
+        ('pendiente', 'Pendiente'),
+        ('en_proceso', 'En proceso'),
+        ('completado', 'Completado'),
+        ('cancelado', 'Cancelado'),
+    ]
+    
+    context = {
+        'mantenimientos': mantenimientos,
+        'estados_filtro': ESTADOS_CORRECTIVOS,
+        'estado_seleccionado': estado,
+    }
+    return render(request, 'flota/mantenimientos/correctivos/lista.html', context)
+
 
 @login_required
 def registrar_mantenimiento_correctivo(request):

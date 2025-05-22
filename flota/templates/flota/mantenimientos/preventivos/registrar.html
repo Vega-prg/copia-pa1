@@ -12,52 +12,83 @@
             </h4>
         </div>
         <div class="card-body">
-            <form method="post">
+            <form method="post" novalidate>
                 {% csrf_token %}
-                
+
+                <!-- Mostrar errores generales del formulario -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
                 <div class="row g-3">
                     <!-- Fila 1 -->
                     <div class="col-md-6">
                         <label class="form-label">{{ form.vehiculo.label }}</label>
                         {{ form.vehiculo }}
+                        {% for error in form.vehiculo.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">{{ form.tipo.label }}</label>
                         {{ form.tipo }}
+                        {% for error in form.tipo.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                    
+
                     <!-- Fila 2 -->
                     <div class="col-12">
                         <label class="form-label">{{ form.descripcion.label }}</label>
                         {{ form.descripcion }}
+                        {% for error in form.descripcion.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                    
+
                     <!-- Fila 3 -->
                     <div class="col-md-6">
                         <label class="form-label">{{ form.km_prox_mantenimiento.label }}</label>
                         {{ form.km_prox_mantenimiento }}
+                        {% for error in form.km_prox_mantenimiento.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">{{ form.fecha_prox_mantenimiento.label }}</label>
                         {{ form.fecha_prox_mantenimiento }}
+                        {% for error in form.fecha_prox_mantenimiento.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                    
+
                     <!-- Fila 4 -->
                     <div class="col-md-6">
                         <label class="form-label">{{ form.presupuesto.label }}</label>
                         {{ form.presupuesto }}
+                        {% for error in form.presupuesto.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">{{ form.estado.label }}</label>
                         {{ form.estado }}
+                        {% for error in form.estado.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                    
+
                     <!-- Fila 5 -->
                     <div class="col-12">
                         <label class="form-label">{{ form.repuestos_utilizados.label }}</label>
                         {{ form.repuestos_utilizados }}
+                        {% for error in form.repuestos_utilizados.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
                     </div>
-                    
+
                     <!-- Botones -->
                     <div class="col-12 mt-4">
                         <div class="d-flex justify-content-end gap-2">

@@ -35,7 +35,7 @@
             </form>
         </div>
 
-        <!-- Tabla -->
+        <!-- Tabla de mantenimientos -->
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-hover table-striped">
@@ -61,41 +61,65 @@
                             <td>{{ m.usuario_registro }}</td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a href="{% url 'detalle_mantenimiento_preventivo' m.id %}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{% url 'detalle_mantenimiento_preventivo' m.id %}" class="btn btn-sm btn-outline-primary" title="Ver detalle">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <a href="{% url 'editar_mantenimiento_preventivo' m.id %}" class="btn btn-sm btn-warning">
+                                    <a href="{% url 'editar_mantenimiento_preventivo' m.id %}" class="btn btn-sm btn-warning" title="Editar mantenimiento">
                                         <i class="bi bi-pencil-square"></i> Editar
                                     </a>
                                 </div>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="7" class="text-center text-muted">No hay registros</td></tr>
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                <i class="bi bi-database-exclamation" style="font-size: 2rem;"></i>
+                                <div>No hay registros</div>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
 
+            <!-- Paginación -->
             {% if is_paginated %}
-            <nav class="mt-4">
+            <nav aria-label="Paginación" class="mt-4">
                 <ul class="pagination justify-content-center">
                     {% if page_obj.has_previous %}
-                    <li class="page-item"><a class="page-link" href="?page=1{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}"><i class="bi bi-chevron-left"></i></a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
                     {% endif %}
 
                     {% for num in page_obj.paginator.page_range %}
                     {% if page_obj.number == num %}
                     <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                     {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
-                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">{{ num }}</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">{{ num }}</a>
+                    </li>
                     {% endif %}
                     {% endfor %}
 
                     {% if page_obj.has_next %}
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}"><i class="bi bi-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </a>
+                    </li>
                     {% endif %}
                 </ul>
             </nav>
