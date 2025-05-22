@@ -1,0 +1,106 @@
+{% extends "flota/base.html" %}
+
+{% block title %}Mantenimientos Preventivos{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="bi bi-tools me-2"></i>Mantenimientos Preventivos</h4>
+            <a href="{% url 'registrar_mantenimiento_preventivo' %}" class="btn btn-light btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> Nuevo
+            </a>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card-body border-bottom">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="estado" class="form-label">Filtrar por estado:</label>
+                    <select name="estado" id="estado" class="form-select">
+                        <option value="">Todos</option>
+                        {% for valor, etiqueta in estados_filtro %}
+                        <option value="{{ valor }}" {% if valor == estado_seleccionado %}selected{% endif %}>{{ etiqueta }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-funnel me-1"></i> Filtrar
+                    </button>
+                    <a href="{% url 'lista_mantenimientos_preventivos' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabla -->
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Vehículo</th>
+                            <th>Tipo</th>
+                            <th>Estado</th>
+                            <th>Próximo Mant.</th>
+                            <th>Fecha Registro</th>
+                            <th>Usuario</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in mantenimientos %}
+                        <tr>
+                            <td>{{ m.vehiculo }}</td>
+                            <td>{{ m.tipo }}</td>
+                            <td><span class="badge {{ m.estado_class }}">{{ m.estado_display }}</span></td>
+                            <td>{{ m.fecha_prox_mantenimiento|date:"d/m/Y" }}</td>
+                            <td>{{ m.fecha_registro|date:"d/m/Y" }}</td>
+                            <td>{{ m.usuario_registro }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'detalle_mantenimiento_preventivo' m.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'editar_mantenimiento_preventivo' m.id %}" class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil-square"></i> Editar
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="text-center text-muted">No hay registros</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page=1{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}"><i class="bi bi-chevron-double-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}"><i class="bi bi-chevron-left"></i></a></li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}">{{ num }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}"><i class="bi bi-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if estado_seleccionado %}&estado={{ estado_seleccionado }}{% endif %}"><i class="bi bi-chevron-double-right"></i></a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

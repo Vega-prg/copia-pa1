@@ -1,0 +1,77 @@
+{% extends "flota/base.html" %}
+
+{% block title %}Registrar Mantenimiento Preventivo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-shield-check me-2"></i>
+                Registrar Mantenimiento Preventivo
+            </h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="row g-3">
+                    <!-- Fila 1 -->
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.vehiculo.label }}</label>
+                        {{ form.vehiculo }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.tipo.label }}</label>
+                        {{ form.tipo }}
+                    </div>
+                    
+                    <!-- Fila 2 -->
+                    <div class="col-12">
+                        <label class="form-label">{{ form.descripcion.label }}</label>
+                        {{ form.descripcion }}
+                    </div>
+                    
+                    <!-- Fila 3 -->
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.km_prox_mantenimiento.label }}</label>
+                        {{ form.km_prox_mantenimiento }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.fecha_prox_mantenimiento.label }}</label>
+                        {{ form.fecha_prox_mantenimiento }}
+                    </div>
+                    
+                    <!-- Fila 4 -->
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.presupuesto.label }}</label>
+                        {{ form.presupuesto }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.estado.label }}</label>
+                        {{ form.estado }}
+                    </div>
+                    
+                    <!-- Fila 5 -->
+                    <div class="col-12">
+                        <label class="form-label">{{ form.repuestos_utilizados.label }}</label>
+                        {{ form.repuestos_utilizados }}
+                    </div>
+                    
+                    <!-- Botones -->
+                    <div class="col-12 mt-4">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'lista_mantenimientos_preventivos' %}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save me-1"></i> Guardar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

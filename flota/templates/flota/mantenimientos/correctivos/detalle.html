@@ -1,0 +1,61 @@
+{% extends "flota/base.html" %}
+
+{% block title %}Detalle Mantenimiento Correctivo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="bi bi-tools me-2"></i> Mantenimiento Correctivo - {{ mantenimiento.vehiculo.placa }}
+            </h4>
+            <a href="{% url 'lista_mantenimientos_correctivos' %}" class="btn btn-light btn-sm">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+        <div class="card-body">
+            <h5 class="mb-3">Información general</h5>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <th>Vehículo</th>
+                        <td>{{ mantenimiento.vehiculo }}</td>
+                    </tr>
+                    <tr>
+                        <th>Prioridad</th>
+                        <td>{{ mantenimiento.get_prioridad_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Estado</th>
+                        <td>{{ mantenimiento.get_estado_display }}</td>
+                    </tr>
+                    <tr>
+                        <th>Fecha de Reporte</th>
+                        <td>{{ mantenimiento.fecha_reporte|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Descripción de la Falla</th>
+                        <td>{{ mantenimiento.descripcion_falla }}</td>
+                    </tr>
+                    <tr>
+                        <th>Solución Aplicada</th>
+                        <td>{{ mantenimiento.solucion|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Fecha Registro</th>
+                        <td>{{ mantenimiento.fecha_registro|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Registrado por</th>
+                        <td>{{ mantenimiento.usuario_registro.get_full_name }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <a href="{% url 'editar_mantenimiento_correctivo' mantenimiento.id %}" class="btn btn-warning">
+                <i class="bi bi-pencil-square me-1"></i> Editar
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

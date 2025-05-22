@@ -1,0 +1,89 @@
+{% extends "flota/base.html" %}
+
+{% block title %}Mantenimientos Correctivos{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="card">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="bi bi-wrench-adjustable-circle me-2"></i>Mantenimientos Correctivos</h4>
+            <a href="{% url 'registrar_mantenimiento_correctivo' %}" class="btn btn-light btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> Nuevo
+            </a>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card-body border-bottom">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="estado" class="form-label">Filtrar por estado:</label>
+                    <select name="estado" id="estado" class="form-select">
+                        <option value="">Todos</option>
+                        {% for valor, etiqueta in estados_filtro %}
+                        <option value="{{ valor }}" {% if valor == estado_seleccionado %}selected{% endif %}>{{ etiqueta }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-danger me-2">
+                        <i class="bi bi-funnel me-1"></i> Filtrar
+                    </button>
+                    <a href="{% url 'lista_mantenimientos_correctivos' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabla -->
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Vehículo</th>
+                            <th>Prioridad</th>
+                            <th>Estado</th>
+                            <th>Fecha Reporte</th>
+                            <th>Usuario</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in mantenimientos %}
+                        <tr>
+                            <td>{{ m.vehiculo }}</td>
+                            <td>{{ m.prioridad_display }}</td>
+                            <td><span class="badge {{ m.estado_class }}">{{ m.estado_display }}</span></td>
+                            <td>{{ m.fecha_reporte|date:"d/m/Y" }}</td>
+                            <td>{{ m.usuario_registro }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'detalle_mantenimiento_correctivo' m.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{% url 'editar_mantenimiento_correctivo' m.id %}" class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil-square"></i> Editar
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted">No hay registros</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {# Igual a la plantilla anterior #}
+                    ...
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

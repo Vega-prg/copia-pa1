@@ -1,0 +1,98 @@
+{% extends "flota/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}Registrar Vehículo{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-car-front-fill me-2"></i>
+                Registrar Nuevo Vehículo
+            </h4>
+        </div>
+        <div class="card-body">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="row g-3">
+                    <!-- Primera columna -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.placa|as_crispy_field }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.marca|as_crispy_field }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.modelo|as_crispy_field }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.anio|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.tipo|as_crispy_field }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Segunda columna -->
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            {{ form.kilometraje_actual|as_crispy_field }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.fecha_ultimo_mantenimiento|as_crispy_field }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.estado|as_crispy_field }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.numero_serie|as_crispy_field }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Observaciones -->
+                <div class="mb-3">
+                    {{ form.observaciones|as_crispy_field }}
+                </div>
+                
+                <!-- Botones -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'lista_vehiculos' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left-circle"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar Vehículo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Validación de formulario -->
+<script>
+// Ejemplo de validación personalizada
+document.querySelector('form').addEventListener('submit', function(e) {
+    const placa = document.getElementById('id_placa').value;
+    if (!placa || placa.trim() === '') {
+        e.preventDefault();
+        alert('La placa es obligatoria');
+    }
+});
+</script>
+{% endblock %}

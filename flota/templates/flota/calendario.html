@@ -1,0 +1,44 @@
+{% extends "flota/base.html" %}
+
+{% block title %}Calendario de Mantenimientos{% endblock %}
+
+{% block content %}
+<div class="card mt-4">
+    <div class="card-header bg-primary text-white">
+        <h4>Próximos Mantenimientos</h4>
+    </div>
+    <div class="card-body">
+        <div class="list-group">
+            {% for m in mantenimientos %}
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="mb-1">
+                            {{ m.vehiculo__placa }} - 
+                            <span class="{% if m.tipo_categoria == 'preventivo' %}text-primary{% else %}text-danger{% endif %}">
+                                {{ m.tipo_categoria|title }}
+                            </span>
+                        </h5>
+                        <p class="mb-1 small">
+                            {{ m.tipo_mantenimiento|truncatechars:50 }}
+                        </p>
+                    </div>
+                    <div class="text-end">
+                        <small class="d-block text-muted">
+                            {{ m.fecha|date:"d M Y" }}
+                        </small>
+                        <span class="badge bg-{% if m.estado == 'pendiente' or m.estado == 'reportado' %}warning{% else %}success{% endif %}">
+                            {{ m.estado|title }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">
+                No hay mantenimientos programados
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestión de Flotas{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="/static/css/styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="bg-dark">
+            <div class="sidebar-header text-center py-4">
+                <h4 class="text-white">Gestión de Flotas</h4>
+            </div>
+
+            <ul class="list-unstyled components">
+                <li class="active">
+                    <a href="{% url 'dashboard' %}" class="d-flex align-items-center">
+                        <i class="bi bi-speedometer2 me-3"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                
+                <!-- Sección Vehículos -->
+                <li>
+                    <a href="#vehiculosSubmenu" data-bs-toggle="collapse" aria-expanded="false" 
+                       class="dropdown-toggle d-flex align-items-center">
+                        <i class="bi bi-truck me-3"></i>
+                        <span>Vehículos</span>
+                    </a>
+                    <ul class="collapse list-unstyled" id="vehiculosSubmenu">
+                        <li>
+                            <a href="{% url 'registrar_vehiculo' %}" class="d-flex align-items-center ps-5">
+                                <i class="bi bi-plus-circle me-2"></i>
+                                <span>Registrar</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'lista_vehiculos' %}" class="d-flex align-items-center ps-5">
+                                <i class="bi bi-list-ul me-2"></i>
+                                <span>Ver todos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                
+                <!-- Sección Mantenimientos -->
+                <li>
+                    <a href="#mantenimientosSubmenu" data-bs-toggle="collapse" aria-expanded="false" 
+                    class="dropdown-toggle d-flex align-items-center">
+                        <i class="bi bi-tools me-3"></i>
+                        <span>Mantenimientos</span>
+                    </a>
+                    <ul class="collapse list-unstyled" id="mantenimientosSubmenu">
+                        <!-- Submenú para Preventivos -->
+                        <li>
+                            <a href="#preventivosSubmenu" data-bs-toggle="collapse" aria-expanded="false" 
+                            class="dropdown-toggle d-flex align-items-center ps-5">
+                                <i class="bi bi-shield-check me-2"></i>
+                                <span>Preventivos</span>
+                            </a>
+                            <ul class="collapse list-unstyled" id="preventivosSubmenu">
+                                <li>
+                                    <a href="{% url 'registrar_mantenimiento_preventivo' %}" class="d-flex align-items-center ps-5">
+                                        <i class="bi bi-plus-circle me-2"></i>
+                                        <span>Registrar</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'lista_mantenimientos_preventivos' %}" class="d-flex align-items-center ps-5">
+                                        <i class="bi bi-list-ul me-2"></i>
+                                        <span>Ver todos</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        
+                        <!-- Submenú para Correctivos -->
+                        <li>
+                            <a href="#correctivosSubmenu" data-bs-toggle="collapse" aria-expanded="false" 
+                            class="dropdown-toggle d-flex align-items-center ps-5">
+                                <i class="bi bi-tools me-2"></i>
+                                <span>Correctivos</span>
+                            </a>
+                            <ul class="collapse list-unstyled" id="correctivosSubmenu">
+                                <li>
+                                    <a href="{% url 'registrar_mantenimiento_correctivo' %}" class="d-flex align-items-center ps-5">
+                                        <i class="bi bi-plus-circle me-2"></i>
+                                        <span>Registrar</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'lista_mantenimientos_correctivos' %}" class="d-flex align-items-center ps-5">
+                                        <i class="bi bi-list-ul me-2"></i>
+                                        <span>Ver todos</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- Otras opciones -->
+                <li>
+                    <a href="{% url 'calendario' %}" class="d-flex align-items-center">
+                        <i class="bi bi-calendar-event me-3"></i>
+                        <span>Calendario</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'alertas' %}" class="d-flex align-items-center">
+                        <i class="bi bi-exclamation-triangle me-3"></i>
+                        <span>Alertas</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Perfil -->
+            <div class="sidebar-profile position-absolute bottom-0 start-0 w-100 p-3 bg-secondary">
+                <div class="d-flex align-items-center">
+                    <img src="https://via.placeholder.com/40" alt="Perfil" class="rounded-circle me-2">
+                    <div>
+                        <span class="text-white d-block">{{ user.get_full_name }}</span>
+                        <small class="text-light">{{ user.get_rol_display }}</small>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Contenido principal -->
+        <div id="content" class="p-4">
+            <!-- Botón para colapsar sidebar (visible en móviles) -->
+            <button type="button" id="sidebarCollapse" class="btn btn-dark d-lg-none mb-3">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <!-- Bloques de contenido -->
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/sidebar.js"></script>
+</body>
+</html>

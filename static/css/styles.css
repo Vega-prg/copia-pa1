@@ -1,0 +1,86 @@
+/* Estilos generales */
+body {
+    background-color: #f8f9fa;
+    overflow-x: hidden;
+}
+
+.wrapper {
+    display: flex;
+    width: 100%;
+}
+
+/* Sidebar */
+#sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    min-height: 100vh;
+    background: #343a40;
+    color: #fff;
+    transition: all 0.3s;
+    position: relative;
+}
+
+#sidebar .sidebar-header {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+#sidebar ul.components {
+    padding: 20px 0;
+}
+
+#sidebar ul li a {
+    padding: 12px 20px;
+    color: #adb5bd;
+    text-decoration: none;
+    display: block;
+    transition: all 0.3s;
+}
+
+#sidebar ul li a:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#sidebar ul li.active > a {
+    color: #fff;
+    background: #007bff;
+}
+
+#sidebar ul li a i {
+    min-width: 20px;
+    text-align: center;
+}
+
+/* Submenús */
+#sidebar ul ul a {
+    font-size: 0.9em;
+    padding-left: 30px !important;
+}
+
+/* Perfil */
+.sidebar-profile {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Contenido principal */
+#content {
+    width: 100%;
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    #sidebar {
+        margin-left: -250px;
+    }
+    #sidebar.active {
+        margin-left: 0;
+    }
+    #content {
+        width: 100%;
+    }
+    #content.active {
+        width: calc(100% - 250px);
+    }
+}

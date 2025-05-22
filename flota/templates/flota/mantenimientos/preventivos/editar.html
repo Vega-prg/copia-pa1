@@ -1,0 +1,18 @@
+{% extends "flota/base.html" %}
+
+{% block title %}Editar Mantenimiento Preventivo - {{ mantenimiento.vehiculo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Editar Mantenimiento Preventivo - {{ mantenimiento.vehiculo }}</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="mb-3">
+            {{ form.as_p }}
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        <a href="{% url 'detalle_mantenimiento_preventivo' mantenimiento.pk %}" class="btn btn-secondary ms-2">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

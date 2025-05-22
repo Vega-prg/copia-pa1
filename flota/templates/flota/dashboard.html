@@ -1,0 +1,199 @@
+{% extends "flota/base.html" %}
+
+{% block title %}Panel de Control{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">Panel de Control</h1>
+    
+    <!-- Resumen Rápido -->
+    <div class="row mb-4">
+        <!-- Vehículos -->
+        <div class="col-md-3">
+            <div class="card text-white bg-primary h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Vehículos</h5>
+                            <p class="display-4">{{ total_vehiculos }}</p>
+                        </div>
+                        <i class="bi bi-truck" style="font-size: 3rem;"></i>
+                    </div>
+                    <a href="{% url 'lista_vehiculos' %}" class="text-white">Ver detalles <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mantenimientos Preventivos Pendientes -->
+        <div class="col-md-3">
+            <div class="card text-white bg-warning h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Preventivos Pendientes</h5>
+                            <p class="display-4">{{ preventivos_pendientes.count }}</p>
+                        </div>
+                        <i class="bi bi-shield-exclamation" style="font-size: 3rem;"></i>
+                    </div>
+                    <a href="{% url 'lista_mantenimientos_preventivos' %}?estado=pendiente" class="text-white">Ver todos <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mantenimientos Correctivos Activos -->
+        <div class="col-md-3">
+            <div class="card text-white bg-danger h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">Correctivos Activos</h5>
+                            <p class="display-4">{{ correctivos_activos.count }}</p>
+                        </div>
+                        <i class="bi bi-tools" style="font-size: 3rem;"></i>
+                    </div>
+                    <a href="{% url 'lista_mantenimientos_correctivos' %}?estado=en_proceso" class="text-white">Ver todos <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vehículos en Mantenimiento -->
+        <div class="col-md-3">
+            <div class="card text-white bg-info h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="card-title">En Taller</h5>
+                            <p class="display-4">{{ vehiculos_en_taller }}</p>
+                        </div>
+                        <i class="bi bi-wrench" style="font-size: 3rem;"></i>
+                    </div>
+                    <a href="{% url 'lista_vehiculos' %}?estado=en_mantenimiento" class="text-white">Ver detalles <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gráficos y Tablas -->
+    <div class="row">
+        <!-- Próximos Mantenimientos -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Próximos Mantenimientos Preventivos</h5>
+                </div>
+                <div class="card-body">
+                    {% if proximos_mantenimientos %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Vehículo</th>
+                                    <th>Tipo</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in proximos_mantenimientos %}
+                                <tr>
+                                    <td>{{ m.vehiculo.placa }}</td>
+                                    <td>{{ m.tipo }}</td>
+                                    <td>{{ m.fecha_prox_mantenimiento|date:"d/m/Y" }}</td>
+                                    <td><span class="badge bg-warning text-dark">{{ m.get_estado_display }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{% url 'lista_mantenimientos_preventivos' %}" class="btn btn-outline-primary btn-sm">Ver todos</a>
+                    {% else %}
+                    <p class="text-muted">No hay mantenimientos programados</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Correctivos Recientes -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Correctivos Recientes</h5>
+                </div>
+                <div class="card-body">
+                    {% if correctivos_recientes %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Vehículo</th>
+                                    <th>Prioridad</th>
+                                    <th>Reportado</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in correctivos_recientes %}
+                                <tr>
+                                    <td>{{ m.vehiculo.placa }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if m.prioridad == 'alta' %}bg-danger
+                                            {% elif m.prioridad == 'media' %}bg-warning text-dark
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ m.get_prioridad_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ m.fecha_reporte|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if m.estado == 'completado' %}bg-success
+                                            {% elif m.estado == 'en_proceso' %}bg-primary
+                                            {% else %}bg-secondary{% endif %}">
+                                            {{ m.get_estado_display }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <a href="{% url 'lista_mantenimientos_correctivos' %}" class="btn btn-outline-primary btn-sm">Ver todos</a>
+                    {% else %}
+                    <p class="text-muted">No hay mantenimientos correctivos recientes</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alertas Recientes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">Alertas Recientes</h5>
+                </div>
+                <div class="card-body">
+                    {% if alertas_recientes %}
+                    <div class="list-group">
+                        {% for alerta in alertas_recientes %}
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ alerta.titulo }}</h6>
+                                <small>{{ alerta.fecha|date:"d/m/Y" }}</small>
+                            </div>
+                            <p class="mb-1">{{ alerta.descripcion }}</p>
+                            <small>Vehículo: {{ alerta.vehiculo.placa }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    <a href="{% url 'alertas' %}" class="btn btn-outline-danger btn-sm mt-3">Ver todas las alertas</a>
+                    {% else %}
+                    <p class="text-muted">No hay alertas recientes</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

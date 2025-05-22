@@ -1,0 +1,29 @@
+{% extends "flota/base.html" %}
+
+{% block title %}Alertas{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-warning text-dark">
+        <h4>Alertas Pendientes</h4>
+    </div>
+    <div class="card-body">
+        <div class="list-group">
+            {% for alerta in alertas %}
+            <a href="#" class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">{{ alerta.titulo }}</h5>
+                    <small>{{ alerta.fecha|date:"d/m/Y" }}</small>
+                </div>
+                <p class="mb-1">{{ alerta.descripcion }}</p>
+                <small>Vehículo: {{ alerta.vehiculo.placa }}</small>
+            </a>
+            {% empty %}
+            <div class="alert alert-success">
+                No hay alertas pendientes
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
