@@ -70,9 +70,12 @@ class VehiculoForm(forms.ModelForm):
 
     def clean_placa(self):
         placa = self.cleaned_data.get('placa')
+        if not placa:
+            raise ValidationError('La placa es obligatoria.')
+        placa = placa.upper()
         if not re.match(r'^[A-Z0-9]{6}$', placa):
             raise ValidationError('La placa debe tener exactamente 6 caracteres alfanuméricos, sin guiones ni espacios.')
-        return placa.upper()
+        return placa
 
     def clean_kilometraje_actual(self):
         km = self.cleaned_data.get('kilometraje_actual')
@@ -82,6 +85,8 @@ class VehiculoForm(forms.ModelForm):
 
     def clean_anio(self):
         anio = self.cleaned_data.get('anio')
+        if anio is None:
+            raise ValidationError('El año es obligatorio.')
         año_actual = timezone.now().year
         if anio > año_actual:
             raise ValidationError('El año no puede ser mayor al actual.')
@@ -91,13 +96,17 @@ class VehiculoForm(forms.ModelForm):
 
     def clean_fecha_ultimo_mantenimiento(self):
         fecha = self.cleaned_data.get('fecha_ultimo_mantenimiento')
+        if fecha is None:
+            return fecha  # Permitir que sea vacío si el modelo lo permite
         if fecha > timezone.now().date():
             raise ValidationError('La fecha no puede ser mayor que hoy.')
         return fecha
 
     def clean_numero_serie(self):
         serie = self.cleaned_data.get('numero_serie')
-        if not serie or len(serie) != 17:
+        if not serie:
+            raise ValidationError('El número de serie es obligatorio.')
+        if len(serie) != 17:
             raise ValidationError('El número de serie debe tener exactamente 17 caracteres.')
         return serie.upper()
 
