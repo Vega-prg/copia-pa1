@@ -8,6 +8,12 @@ from itertools import chain
 from django.db.models import F, Value
 from django.core.paginator import Paginator
 from django.contrib import messages
+from django.shortcuts import redirect
+from .decorators import rol_requerido
+
+
+def error_403(request, exception):
+    return render(request, '403.html', status=403)
 
 
 @login_required
@@ -53,6 +59,7 @@ def dashboard(request):
     })
 
 @login_required
+@rol_requerido('administrador') 
 def editar_vehiculo(request, pk):
     vehiculo = get_object_or_404(Vehiculo, pk=pk)
     
@@ -136,6 +143,7 @@ def lista_vehiculos(request):
     return render(request, 'flota/vehiculos/lista.html', context)
 
 @login_required
+@rol_requerido('administrador', 'supervisor')
 def registrar_vehiculo(request):
     if request.method == 'POST':
         form = VehiculoForm(request.POST)
@@ -160,14 +168,56 @@ def lista_mantenimientos(request):
         'correctivos': correctivos
     })
 
-@login_required
-def lista_mantenimientos_preventivos(request):
-    mantenimientos = MantenimientoPreventivo.objects.all().order_by('-fecha_registro')
-    return render(request, 'flota/mantenimientos/preventivos/lista.html', {
-        'mantenimientos': mantenimientos
-    })
+
 
 @login_required
+def lista_mantenimientos_preventivos(request):
+    ESTADOS = {
+        'pendiente': 'Pendiente',
+        'completado': 'Completado',
+        'cancelado': 'Cancelado',
+    }
+
+    BADGE_CLASSES = {
+        'pendiente': 'bg-warning text-dark',
+        'completado': 'bg-success',
+        'cancelado': 'bg-danger'
+    }
+    estado = request.GET.get('estado')
+    mantenimientos_qs = MantenimientoPreventivo.objects.select_related('vehiculo', 'usuario_registro').all().order_by('-fecha_registro')
+    
+    if estado:
+        mantenimientos_qs = mantenimientos_qs.filter(estado=estado)
+
+    mantenimientos_data = []
+    for m in mantenimientos_qs:
+        mantenimientos_data.append({
+            'id': m.id,
+            'vehiculo': str(m.vehiculo),
+            'tipo': m.tipo,  # O usa m.get_tipo_display() si hay choices
+            'estado_display': ESTADOS.get(m.estado, 'Desconocido'),
+            'estado_class': BADGE_CLASSES.get(m.estado, 'bg-danger'),
+            'fecha_prox_mantenimiento': m.fecha_prox_mantenimiento,
+            'fecha_registro': m.fecha_registro,
+            'usuario_registro': str(m.usuario_registro),
+        })
+
+    paginator = Paginator(mantenimientos_data, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'mantenimientos': page_obj.object_list,
+        'page_obj': page_obj,
+        'is_paginated': page_obj.has_other_pages(),
+        'estados_filtro': ESTADOS.items(),
+        'estado_seleccionado': estado,
+    }
+
+    return render(request, 'flota/mantenimientos/preventivos/lista.html', context)
+
+@login_required
+@rol_requerido('administrador', 'supervisor')
 def registrar_mantenimiento_preventivo(request):
     if request.method == 'POST':
         form = MantenimientoPreventivoForm(request.POST)
@@ -199,6 +249,7 @@ def detalle_mantenimiento_preventivo(request, pk):
 
 
 @login_required
+@rol_requerido('administrador')
 def editar_mantenimiento_preventivo(request, pk):
     mantenimiento = get_object_or_404(MantenimientoPreventivo, pk=pk)
     if request.method == "POST":
@@ -214,14 +265,59 @@ def editar_mantenimiento_preventivo(request, pk):
         'mantenimiento': mantenimiento,
     })
 
-@login_required
-def lista_mantenimientos_correctivos(request):
-    mantenimientos = MantenimientoCorrectivo.objects.all().order_by('-fecha_reporte')
-    return render(request, 'flota/mantenimientos/correctivos/lista.html', {
-        'mantenimientos': mantenimientos
-    })
+
 
 @login_required
+def lista_mantenimientos_correctivos(request):
+
+    ESTADOS = {
+        'reportado': 'Reportado',
+        'en_proceso': 'En Proceso',
+        'completado': 'Completado',
+        'cancelado': 'Cancelado',
+    }
+    BADGE_CLASSES = {
+        'reportado': 'bg-primary',
+        'en_proceso': 'bg-warning text-dark',
+        'completado': 'bg-success',
+        'cancelado': 'bg-danger'
+    }
+    estado = request.GET.get('estado')
+    mantenimientos_qs = MantenimientoCorrectivo.objects.select_related('vehiculo', 'usuario_registro').all().order_by('-fecha_reporte')
+    
+    if estado:
+        mantenimientos_qs = mantenimientos_qs.filter(estado=estado)
+
+    mantenimientos_data = []
+    for m in mantenimientos_qs:
+        mantenimientos_data.append({
+            'id': m.id,
+            'vehiculo': str(m.vehiculo),
+            'prioridad': m.prioridad,
+            'descripcion': m.descripcion_falla,
+            'estado_display': ESTADOS.get(m.estado, 'Desconocido'),
+            'estado_class': BADGE_CLASSES.get(m.estado, 'bg-danger'),
+            'fecha_reporte': m.fecha_reporte,
+            'fecha_ejecucion': m.fecha_solucion,
+            'usuario_registro': str(m.usuario_registro),
+        })
+
+    paginator = Paginator(mantenimientos_data, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'mantenimientos': page_obj.object_list,
+        'page_obj': page_obj,
+        'is_paginated': page_obj.has_other_pages(),
+        'estados_filtro': ESTADOS.items(),
+        'estado_seleccionado': estado,
+    }
+
+    return render(request, 'flota/mantenimientos/correctivos/lista.html', context)
+
+@login_required
+@rol_requerido('administrador', 'supervisor')
 def registrar_mantenimiento_correctivo(request):
     if request.method == 'POST':
         form = MantenimientoCorrectivoForm(request.POST)
@@ -254,6 +350,7 @@ def detalle_mantenimiento_correctivo(request, pk):
 
 
 @login_required
+@rol_requerido('administrador')
 def editar_mantenimiento_correctivo(request, pk):
     mantenimiento = get_object_or_404(MantenimientoCorrectivo, pk=pk)
     if request.method == "POST":
@@ -271,40 +368,75 @@ def editar_mantenimiento_correctivo(request, pk):
 
 @login_required
 def calendario(request):
-    # Obtener mantenimientos preventivos
-    preventivos = MantenimientoPreventivo.objects.filter(
-        fecha_prox_mantenimiento__gte=timezone.now()
-    ).annotate(
-        tipo_mantenimiento=F('tipo'),  # campo original
+    # Parámetros de filtro
+    tipo_filtro = request.GET.get('tipo', '')
+    estado_filtro = request.GET.get('estado', '')
+    
+    # Consulta base para preventivos
+    preventivos = MantenimientoPreventivo.objects.all().annotate(
+        tipo_mantenimiento=F('tipo'),
         fecha=F('fecha_prox_mantenimiento'),
-        tipo_categoria=Value('preventivo')  # ⚠️ CAMBIAMOS el nombre
+        tipo_categoria=Value('preventivo'),
+        estado_mostrar=F('estado')  # Usamos el campo original
     ).values(
         'id', 'vehiculo__placa', 'tipo_mantenimiento', 'fecha', 
-        'estado', 'descripcion', 'tipo_categoria'
+        'estado', 'descripcion', 'tipo_categoria', 'estado_mostrar'
     )
-
     
-    # Obtener mantenimientos correctivos
-    correctivos = MantenimientoCorrectivo.objects.filter(
-        fecha_solucion__gte=timezone.now()
-    ).annotate(
+    # Consulta base para correctivos
+    correctivos = MantenimientoCorrectivo.objects.all().annotate(
         tipo_mantenimiento=F('descripcion_falla'),
         fecha=F('fecha_solucion'),
-        tipo_categoria=Value('correctivo')  # ⚠️ También este nombre debe coincidir
+        tipo_categoria=Value('correctivo'),
+        estado_mostrar=F('estado')  # Usamos el campo original
     ).values(
         'id', 'vehiculo__placa', 'tipo_mantenimiento', 'fecha', 
-        'estado', 'solucion_aplicada', 'tipo_categoria'
+        'estado', 'solucion_aplicada', 'tipo_categoria', 'estado_mostrar'
     )
-
     
-    # Combinar y ordenar
+    # Aplicar filtros
+    if tipo_filtro:
+        if tipo_filtro == 'preventivo':
+            correctivos = correctivos.none()
+        elif tipo_filtro == 'correctivo':
+            preventivos = preventivos.none()
+    
+    if estado_filtro:
+        preventivos = preventivos.filter(estado=estado_filtro)
+        correctivos = correctivos.filter(estado=estado_filtro)
+    
+    # Combinar y ordenar por fecha ascendente (más cercana primero)
     mantenimientos = sorted(
         chain(preventivos, correctivos),
-        key=lambda x: x['fecha']
-    )[:15]  # Limitar a 15 resultados
+        key=lambda x: x['fecha'] if x['fecha'] else timezone.now().date()
+    )
+    
+    # Paginación (15 items por página)
+    paginator = Paginator(mantenimientos, 6)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Estados disponibles para los filtros
+    estados_preventivos = [
+        ('pendiente', 'Pendiente'),
+        ('completado', 'Completado'),
+        ('cancelado', 'Cancelado')
+    ]
+    
+    estados_correctivos = [
+        ('reportado', 'Reportado'),
+        ('en_proceso', 'En Proceso'),
+        ('completado', 'Completado'),
+        ('cancelado', 'Cancelado')
+    ]
     
     return render(request, 'flota/calendario.html', {
-        'mantenimientos': mantenimientos
+        'page_obj': page_obj,
+        'hoy': timezone.now().date(),
+        'tipo_seleccionado': tipo_filtro,
+        'estado_seleccionado': estado_filtro,
+        'estados_preventivos': estados_preventivos,
+        'estados_correctivos': estados_correctivos
     })
 
 @login_required

@@ -36,9 +36,9 @@ class Vehiculo(models.Model):
     anio = models.IntegerField(null=True, blank=True)
     tipo = models.CharField(max_length=11, choices=TIPOS)
     numero_serie = models.CharField(max_length=50, null=True, blank=True)
-    kilometraje_actual = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    fecha_ultimo_mantenimiento = models.DateField(null=True, blank=True)
-    estado = models.CharField(max_length=17, choices=ESTADOS, default='activo')
+    kilometraje_actual = models.DecimalField(max_digits=10, decimal_places=2, default=0)    #PUEDE VARIAR
+    fecha_ultimo_mantenimiento = models.DateField(null=True, blank=True)                    #PUEDE VARIAR
+    estado = models.CharField(max_length=17, choices=ESTADOS, default='activo')             #PUEDE VARIAR
     observaciones = models.TextField(null=True, blank=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
     usuario_registro = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True)

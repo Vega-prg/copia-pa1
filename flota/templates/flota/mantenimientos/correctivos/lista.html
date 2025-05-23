@@ -53,7 +53,7 @@
                         {% for m in mantenimientos %}
                         <tr>
                             <td>{{ m.vehiculo }}</td>
-                            <td>{{ m.prioridad_display }}</td>
+                            <td>{{m.prioridad}}</td>
                             <td><span class="badge {{ m.estado_class }}">{{ m.estado_display }}</span></td>
                             <td>{{ m.fecha_reporte|date:"d/m/Y" }}</td>
                             <td>{{ m.usuario_registro }}</td>
@@ -74,12 +74,11 @@
                     </tbody>
                 </table>
             </div>
-
+            <!-- Paginación -->
             {% if is_paginated %}
             <nav class="mt-4">
                 <ul class="pagination justify-content-center">
-                    {# Igual a la plantilla anterior #}
-                    ...
+                {% include "flota/paginacion.html" %}
                 </ul>
             </nav>
             {% endif %}

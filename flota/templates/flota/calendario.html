@@ -3,42 +3,91 @@
 {% block title %}Calendario de Mantenimientos{% endblock %}
 
 {% block content %}
-<div class="card mt-4">
-    <div class="card-header bg-primary text-white">
-        <h4>Próximos Mantenimientos</h4>
-    </div>
-    <div class="card-body">
-        <div class="list-group">
-            {% for m in mantenimientos %}
-            <div class="list-group-item">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h5 class="mb-1">
-                            {{ m.vehiculo__placa }} - 
-                            <span class="{% if m.tipo_categoria == 'preventivo' %}text-primary{% else %}text-danger{% endif %}">
-                                {{ m.tipo_categoria|title }}
-                            </span>
-                        </h5>
-                        <p class="mb-1 small">
-                            {{ m.tipo_mantenimiento|truncatechars:50 }}
-                        </p>
-                    </div>
-                    <div class="text-end">
-                        <small class="d-block text-muted">
-                            {{ m.fecha|date:"d M Y" }}
-                        </small>
-                        <span class="badge bg-{% if m.estado == 'pendiente' or m.estado == 'reportado' %}warning{% else %}success{% endif %}">
-                            {{ m.estado|title }}
-                        </span>
-                    </div>
+<div class="container mt-4">
+    <h2 class="mb-4">Calendario de Mantenimientos</h2>
+    
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Tipo:</label>
+                    <select name="tipo" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="preventivo" {% if tipo_seleccionado == 'preventivo' %}selected{% endif %}>Preventivos</option>
+                        <option value="correctivo" {% if tipo_seleccionado == 'correctivo' %}selected{% endif %}>Correctivos</option>
+                    </select>
                 </div>
-            </div>
-            {% empty %}
-            <div class="alert alert-info">
-                No hay mantenimientos programados
-            </div>
-            {% endfor %}
+                <div class="col-md-3">
+                    <label class="form-label">Estado:</label>
+                    <select name="estado" class="form-select">
+                        <option value="">Todos</option>
+                        {% if not tipo_seleccionado or tipo_seleccionado == 'preventivo' %}
+                            {% for valor, etiqueta in estados_preventivos %}
+                            <option value="{{ valor }}" {% if estado_seleccionado == valor %}selected{% endif %}>
+                                {{ etiqueta }}
+                            </option>
+                            {% endfor %}
+                        {% endif %}
+                        {% if not tipo_seleccionado or tipo_seleccionado == 'correctivo' %}
+                            {% for valor, etiqueta in estados_correctivos %}
+                            <option value="{{ valor }}" {% if estado_seleccionado == valor %}selected{% endif %}>
+                                {{ etiqueta }}
+                            </option>
+                            {% endfor %}
+                        {% endif %}
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                    <a href="{% url 'calendario' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-counterclockwise"></i> Limpiar
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
+
+    <!-- Lista de mantenimientos -->
+    <div class="list-group mb-4">
+        {% for m in page_obj.object_list %}
+        <div class="list-group-item {% if m.fecha < hoy %}list-group-item-light{% else %}{% if m.tipo_categoria == 'preventivo' %}list-group-item-warning{% else %}list-group-item-danger{% endif %}{% endif %}">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="mb-1">
+                        {{ m.fecha|date:"d/m/Y" }}
+                        <span class="badge bg-{% if m.tipo_categoria == 'preventivo' %}warning text-dark{% else %}danger{% endif %}">
+                            {{ m.tipo_categoria|title }}
+                        </span>
+                        <span class="badge bg-{% if m.fecha < hoy %}secondary
+                                          {% else %}{% if m.estado == 'pendiente' or m.estado == 'reportado' %}primary
+                                          {% elif m.estado == 'en_proceso' %}warning text-dark
+                                          {% elif m.estado == 'completado' %}success
+                                          {% else %}danger{% endif %}{% endif %}">
+                            {{ m.estado|title }}
+                        </span>
+                    </h5>
+                    <p class="mb-1"><strong>{{ m.vehiculo__placa }}</strong> - {{ m.tipo_mantenimiento }}</p>
+                    <p class="mb-1 small">{{ m.descripcion|truncatechars:100 }}</p>
+                    {% if m.tipo_categoria == 'correctivo' %}
+                    <p class="mb-1 small"><em>Solución:</em> {{ m.solucion_aplicada|truncatechars:80 }}</p>
+                    {% endif %}
+                </div>
+                <a href="{% if m.tipo_categoria == 'preventivo' %}{% url 'editar_mantenimiento_preventivo' m.id %}{% else %}{% url 'editar_mantenimiento_correctivo' m.id %}{% endif %}" 
+                   class="btn btn-sm btn-outline-primary"
+                   title="Editar">
+                    <i class="bi bi-pencil"></i>
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">No se encontraron mantenimientos con los filtros aplicados.</div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginación -->
+    {% include "flota/paginacion.html" with page_obj=page_obj %}
 </div>
 {% endblock %}

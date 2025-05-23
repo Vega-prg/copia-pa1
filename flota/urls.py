@@ -1,5 +1,10 @@
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
+from django.conf.urls import handler403
+from .views import error_403
+
+handler403 = error_403
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -20,6 +25,8 @@ urlpatterns = [
     path('mantenimientos/correctivos/<int:pk>/editar/', views.editar_mantenimiento_correctivo, name='editar_mantenimiento_correctivo'),
     path('calendario/', views.calendario, name='calendario'),
     path('alertas/', views.alertas, name='alertas'),
-    
+    # URLs de autenticación
+    path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
 
 ]
