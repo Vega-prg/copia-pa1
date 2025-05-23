@@ -83,8 +83,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'gestion_flotas',       # Nombre exacto de la BD 
-        'USER': 'postgres',             # Usuario por defecto
-        'PASSWORD': '123456',    # Al instalar PostgreSQL
+        'USER': 'administrador',             # Usuario por defecto
+        'PASSWORD': '123',    # Al instalar PostgreSQL
         'HOST': 'localhost',            # Localhost
         'PORT': '5432',                 # Puerto por defecto
     }
