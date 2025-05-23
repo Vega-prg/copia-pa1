@@ -10,6 +10,7 @@ from django.core.paginator import Paginator
 from django.contrib import messages
 from django.shortcuts import redirect
 from .decorators import rol_requerido
+from django.db.models.functions import ExtractYear, ExtractMonth, ExtractDay
 
 
 def error_403(request, exception):
@@ -366,77 +367,84 @@ def editar_mantenimiento_correctivo(request, pk):
         'mantenimiento': mantenimiento,
     })
 
+
 @login_required
 def calendario(request):
-    # Parámetros de filtro
-    tipo_filtro = request.GET.get('tipo', '')
-    estado_filtro = request.GET.get('estado', '')
+    # Obtener parámetros de filtro
+    year = request.GET.get('year')
+    month = request.GET.get('month')
+    day = request.GET.get('day')
     
     # Consulta base para preventivos
-    preventivos = MantenimientoPreventivo.objects.all().annotate(
+    preventivos = MantenimientoPreventivo.objects.annotate(
+        year=ExtractYear('fecha_prox_mantenimiento'),
+        month=ExtractMonth('fecha_prox_mantenimiento'),
+        day=ExtractDay('fecha_prox_mantenimiento'),
         tipo_mantenimiento=F('tipo'),
         fecha=F('fecha_prox_mantenimiento'),
-        tipo_categoria=Value('preventivo'),
-        estado_mostrar=F('estado')  # Usamos el campo original
+        tipo_categoria=Value('preventivo')
     ).values(
-        'id', 'vehiculo__placa', 'tipo_mantenimiento', 'fecha', 
-        'estado', 'descripcion', 'tipo_categoria', 'estado_mostrar'
+        'id', 'vehiculo__placa', 'tipo_mantenimiento', 'fecha',
+        'year', 'month', 'day', 'estado', 'descripcion', 'tipo_categoria'
     )
     
     # Consulta base para correctivos
-    correctivos = MantenimientoCorrectivo.objects.all().annotate(
+    correctivos = MantenimientoCorrectivo.objects.annotate(
+        year=ExtractYear('fecha_solucion'),
+        month=ExtractMonth('fecha_solucion'),
+        day=ExtractDay('fecha_solucion'),
         tipo_mantenimiento=F('descripcion_falla'),
         fecha=F('fecha_solucion'),
-        tipo_categoria=Value('correctivo'),
-        estado_mostrar=F('estado')  # Usamos el campo original
+        tipo_categoria=Value('correctivo')
     ).values(
-        'id', 'vehiculo__placa', 'tipo_mantenimiento', 'fecha', 
-        'estado', 'solucion_aplicada', 'tipo_categoria', 'estado_mostrar'
+        'id', 'vehiculo__placa', 'tipo_mantenimiento', 'fecha',
+        'year', 'month', 'day', 'estado', 'solucion_aplicada', 'tipo_categoria'
     )
     
     # Aplicar filtros
-    if tipo_filtro:
-        if tipo_filtro == 'preventivo':
-            correctivos = correctivos.none()
-        elif tipo_filtro == 'correctivo':
-            preventivos = preventivos.none()
+    if year:
+        preventivos = preventivos.filter(year=year)
+        correctivos = correctivos.filter(year=year)
+    if month:
+        preventivos = preventivos.filter(month=month)
+        correctivos = correctivos.filter(month=month)
+    if day:
+        preventivos = preventivos.filter(day=day)
+        correctivos = correctivos.filter(day=day)
     
-    if estado_filtro:
-        preventivos = preventivos.filter(estado=estado_filtro)
-        correctivos = correctivos.filter(estado=estado_filtro)
-    
-    # Combinar y ordenar por fecha ascendente (más cercana primero)
+    # Combinar y ordenar
     mantenimientos = sorted(
         chain(preventivos, correctivos),
         key=lambda x: x['fecha'] if x['fecha'] else timezone.now().date()
     )
     
-    # Paginación (15 items por página)
-    paginator = Paginator(mantenimientos, 6)
+    # Obtener años disponibles
+    years_preventivos = MantenimientoPreventivo.objects.dates('fecha_prox_mantenimiento', 'year')
+    years_correctivos = MantenimientoCorrectivo.objects.dates('fecha_solucion', 'year')
+    years = sorted(set([y.year for y in chain(years_preventivos, years_correctivos)]), reverse=True)
+    
+    # Meses y días predefinidos
+    months = [
+        (1, 'Enero'), (2, 'Febrero'), (3, 'Marzo'), 
+        (4, 'Abril'), (5, 'Mayo'), (6, 'Junio'),
+        (7, 'Julio'), (8, 'Agosto'), (9, 'Septiembre'),
+        (10, 'Octubre'), (11, 'Noviembre'), (12, 'Diciembre')
+    ]
+    days = [(d, d) for d in range(1, 32)]
+    
+    # Paginación
+    paginator = Paginator(mantenimientos, 15)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Estados disponibles para los filtros
-    estados_preventivos = [
-        ('pendiente', 'Pendiente'),
-        ('completado', 'Completado'),
-        ('cancelado', 'Cancelado')
-    ]
-    
-    estados_correctivos = [
-        ('reportado', 'Reportado'),
-        ('en_proceso', 'En Proceso'),
-        ('completado', 'Completado'),
-        ('cancelado', 'Cancelado')
-    ]
-    
     return render(request, 'flota/calendario.html', {
         'page_obj': page_obj,
-        'hoy': timezone.now().date(),
-        'tipo_seleccionado': tipo_filtro,
-        'estado_seleccionado': estado_filtro,
-        'estados_preventivos': estados_preventivos,
-        'estados_correctivos': estados_correctivos
+        'years': years,
+        'months': months,
+        'days': days,
+        'selected_year': year,
+        'selected_month': month,
+        'selected_day': day
     })
 
 @login_required
@@ -444,16 +452,71 @@ def alertas(request):
     hoy = date.today()
     alertas = []
     
-    # Alertas de mantenimiento preventivo
+    # Alertas de mantenimiento preventivo (fecha)
     for mp in MantenimientoPreventivo.objects.filter(estado='pendiente'):
-        if mp.fecha_prox_mantenimiento and (mp.fecha_prox_mantenimiento - hoy) <= timedelta(days=7):
-            alertas.append({
-                'titulo': f'Mantenimiento Preventivo: {mp.tipo}',
-                'descripcion': f'Vence el {mp.fecha_prox_mantenimiento.strftime("%d/%m/%Y")}',
-                'fecha': mp.fecha_prox_mantenimiento,
-                'vehiculo': mp.vehiculo
-            })
+        if mp.fecha_prox_mantenimiento:
+            dias_restantes = (mp.fecha_prox_mantenimiento - hoy).days
+            if 0 <= dias_restantes <= 7:
+                alertas.append({
+                    'id': mp.id,
+                    'tipo': 'preventivo',
+                    'motivo': 'fecha',
+                    'titulo': f'Mantenimiento Preventivo: {mp.tipo}',
+                    'descripcion': f'Vence en {dias_restantes} días ({mp.fecha_prox_mantenimiento.strftime("%d/%m/%Y")})',
+                    'fecha': mp.fecha_prox_mantenimiento,
+                    'vehiculo': mp.vehiculo,
+                    'prioridad': 'alta' if dias_restantes <= 3 else 'media'
+                })
+    
+    # Alertas de mantenimiento preventivo (kilometraje)
+    for mp in MantenimientoPreventivo.objects.filter(estado='pendiente'):
+        if mp.km_prox_mantenimiento and mp.vehiculo.kilometraje_actual:
+            km_restantes = mp.km_prox_mantenimiento - mp.vehiculo.kilometraje_actual
+            if 0 <= km_restantes <= 500:
+                alertas.append({
+                    'id': mp.id,
+                    'tipo': 'preventivo',
+                    'motivo': 'kilometraje',
+                    'titulo': f'Mantenimiento Preventivo: {mp.tipo}',
+                    'descripcion': f'Faltan {km_restantes:.0f} km para el mantenimiento',
+                    'kilometraje_actual': mp.vehiculo.kilometraje_actual,
+                    'km_prox_mantenimiento': mp.km_prox_mantenimiento,
+                    'vehiculo': mp.vehiculo,
+                    'prioridad': 'alta' if km_restantes <= 100 else 'media'
+                })
+    
+    # Alertas para mantenimientos correctivos
+    for mc in MantenimientoCorrectivo.objects.exclude(estado='completado'):
+        if mc.fecha_solucion:
+            dias_restantes = (mc.fecha_solucion - hoy).days
+            if 0 <= dias_restantes <= 7:
+                alertas.append({
+                    'id': mc.id,
+                    'tipo': 'correctivo',
+                    'motivo': 'fecha',
+                    'titulo': f'Mantenimiento Correctivo: {mc.descripcion_falla[:30]}...',
+                    'descripcion': f'Solución programada para {dias_restantes} días ({mc.fecha_solucion.strftime("%d/%m/%Y")})',
+                    'fecha': mc.fecha_solucion,
+                    'vehiculo': mc.vehiculo,
+                    'prioridad': 'alta' if dias_restantes <= 2 else 'media'
+                })
+    
+    # Ordenar alertas por prioridad y fecha/km
+    alertas_ordenadas = sorted(
+        alertas,
+        key=lambda x: (
+            0 if x['prioridad'] == 'alta' else 1,
+            x.get('fecha', date.max),
+            x.get('km_prox_mantenimiento', float('inf'))
+        )
+    )
+    
+    # Paginación (6 alertas por página)
+    paginator = Paginator(alertas_ordenadas, 6)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     
     return render(request, 'flota/alertas.html', {
-        'alertas': alertas
+        'page_obj': page_obj,
+        'hoy': hoy
     })

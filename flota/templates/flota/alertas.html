@@ -3,27 +3,60 @@
 {% block title %}Alertas{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header bg-warning text-dark">
-        <h4>Alertas Pendientes</h4>
-    </div>
-    <div class="card-body">
-        <div class="list-group">
-            {% for alerta in alertas %}
-            <a href="#" class="list-group-item list-group-item-action">
-                <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">{{ alerta.titulo }}</h5>
-                    <small>{{ alerta.fecha|date:"d/m/Y" }}</small>
+<div class="container mt-4">
+    <h2 class="mb-4">Alertas Activas</h2>
+    
+    {% if page_obj.object_list %}
+    <div class="row">
+        {% for alerta in page_obj.object_list %}
+        <div class="col-md-6 mb-4">
+            <div class="card border-{% if alerta.prioridad == 'alta' %}danger{% else %}warning{% endif %}">
+                <div class="card-header bg-{% if alerta.prioridad == 'alta' %}danger{% else %}warning{% endif %} text-white">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="mb-0">
+                            <i class="bi bi-{% if alerta.tipo == 'preventivo' %}shield-exclamation{% else %}tools{% endif %}"></i>
+                            {{ alerta.titulo }}
+                        </h5>
+                        <span class="badge bg-light text-{% if alerta.prioridad == 'alta' %}danger{% else %}dark{% endif %}">
+                            {{ alerta.prioridad|upper }}
+                        </span>
+                    </div>
                 </div>
-                <p class="mb-1">{{ alerta.descripcion }}</p>
-                <small>Vehículo: {{ alerta.vehiculo.placa }}</small>
-            </a>
-            {% empty %}
-            <div class="alert alert-success">
-                No hay alertas pendientes
+                <div class="card-body">
+                    <p>{{ alerta.descripcion }}</p>
+                    <p class="mb-1"><strong>Vehículo:</strong> {{ alerta.vehiculo.placa }} - {{ alerta.vehiculo.marca }} {{ alerta.vehiculo.modelo }}</p>
+                    
+                    {% if alerta.motivo == 'kilometraje' %}
+                    <p class="mb-1">
+                        <strong>Kilometraje:</strong> 
+                        {{ alerta.kilometraje_actual|floatformat:0 }} km / 
+                        {{ alerta.km_prox_mantenimiento|floatformat:0 }} km
+                    </p>
+                    {% else %}
+                    <p class="mb-1">
+                        <strong>Fecha:</strong> 
+                        {{ alerta.fecha|date:"d/m/Y" }}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% if alerta.tipo == 'preventivo' %}{% url 'editar_mantenimiento_preventivo' alerta.id %}{% else %}{% url 'editar_mantenimiento_correctivo' alerta.id %}{% endif %}" 
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-pencil"></i> Ver detalles
+                    </a>
+                </div>
             </div>
-            {% endfor %}
         </div>
+        {% endfor %}
     </div>
+
+    <!-- Paginación -->
+    {% include "flota/paginacion.html" %}
+    
+    {% else %}
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle-fill"></i> No hay alertas activas en este momento.
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
