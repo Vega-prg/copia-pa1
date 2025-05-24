@@ -8,6 +8,9 @@ from itertools import chain
 from django.db.models import F, Value
 from django.core.paginator import Paginator
 from django.contrib import messages
+from rest_framework import viewsets
+
+from .serializers import VehiculoSerializer
 
 
 @login_required
@@ -325,3 +328,6 @@ def alertas(request):
     return render(request, 'flota/alertas.html', {
         'alertas': alertas
     })
+class VehiculoViewSet(viewsets.ModelViewSet):
+    queryset = Vehiculo.objects.all()
+    serializer_class = VehiculoSerializer
