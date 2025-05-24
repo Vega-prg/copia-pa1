@@ -39,15 +39,15 @@
                     </tr>
                     <tr>
                         <th>Solución Aplicada</th>
-                        <td>{{ mantenimiento.solucion|default:"-" }}</td>
+                        <td>{{ mantenimiento.solucion_aplicada|default:"-" }}</td>
                     </tr>
                     <tr>
                         <th>Fecha Registro</th>
-                        <td>{{ mantenimiento.fecha_registro|date:"d/m/Y H:i" }}</td>
+                        <td>{{ mantenimiento.fecha_reporte|date:"d/m/Y H:i" }}</td>
                     </tr>
                     <tr>
                         <th>Registrado por</th>
-                        <td>{{ mantenimiento.usuario_registro.get_full_name }}</td>
+                        <td>{{ mantenimiento.usuario_registro}}</td>
                     </tr>
                 </tbody>
             </table>

@@ -25,7 +25,15 @@
                 <div class="card-body">
                     <p>{{ alerta.descripcion }}</p>
                     <p class="mb-1"><strong>Vehículo:</strong> {{ alerta.vehiculo.placa }} - {{ alerta.vehiculo.marca }} {{ alerta.vehiculo.modelo }}</p>
-                    
+                    <p class="mb-1">
+                        <strong>Código de mantenimiento:</strong> 
+                        {% if alerta.tipo == 'preventivo' %}
+                            MP-{{ alerta.id|stringformat:"04d" }}
+                        {% else %}
+                            MC-{{ alerta.id|stringformat:"04d" }}
+                        {% endif %}
+                    </p>
+
                     {% if alerta.motivo == 'kilometraje' %}
                     <p class="mb-1">
                         <strong>Kilometraje:</strong> 

@@ -1,4 +1,5 @@
 {% extends "flota/base.html" %}
+{% load static %}
 
 {% block title %}Registrar Mantenimiento Correctivo{% endblock %}
 
@@ -12,7 +13,7 @@
             </h4>
         </div>
         <div class="card-body">
-            <form method="post">
+            <form method="post" novalidate>
                 {% csrf_token %}
                 
                 <div class="row g-3">
@@ -20,44 +21,71 @@
                     <div class="col-md-6">
                         <label class="form-label">{{ form.vehiculo.label }}</label>
                         {{ form.vehiculo }}
+                        {% if form.vehiculo.errors %}
+                            <div class="text-danger small">{{ form.vehiculo.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">{{ form.prioridad.label }}</label>
                         {{ form.prioridad }}
+                        {% if form.prioridad.errors %}
+                            <div class="text-danger small">{{ form.prioridad.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     
                     <!-- Fila 2 -->
                     <div class="col-12">
                         <label class="form-label">{{ form.descripcion_falla.label }}</label>
                         {{ form.descripcion_falla }}
+                        {% if form.descripcion_falla.errors %}
+                            <div class="text-danger small">{{ form.descripcion_falla.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     
                     <!-- Fila 3 -->
                     <div class="col-12">
                         <label class="form-label">{{ form.solucion_aplicada.label }}</label>
                         {{ form.solucion_aplicada }}
+                        {% if form.solucion_aplicada.errors %}
+                            <div class="text-danger small">{{ form.solucion_aplicada.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     
                     <!-- Fila 4 -->
                     <div class="col-md-6">
                         <label class="form-label">{{ form.presupuesto.label }}</label>
                         {{ form.presupuesto }}
+                        {% if form.presupuesto.errors %}
+                            <div class="text-danger small">{{ form.presupuesto.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">{{ form.estado.label }}</label>
                         {{ form.estado }}
+                        {% if form.estado.errors %}
+                            <div class="text-danger small">{{ form.estado.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     
                     <!-- Fila 5 -->
                     <div class="col-md-6">
                         <label class="form-label">{{ form.fecha_solucion.label }}</label>
                         {{ form.fecha_solucion }}
+                        {% if form.fecha_solucion.errors %}
+                            <div class="text-danger small">{{ form.fecha_solucion.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">{{ form.repuestos_utilizados.label }}</label>
                         {{ form.repuestos_utilizados }}
+                        {% if form.repuestos_utilizados.errors %}
+                            <div class="text-danger small">{{ form.repuestos_utilizados.errors.0 }}</div>
+                        {% endif %}
                     </div>
                     
+                     <!-- Contenedor para los datos del vehículo -->
+                    <div class="col-12" id="info-vehiculo"></div>
+
                     <!-- Botones -->
                     <div class="col-12 mt-4">
                         <div class="d-flex justify-content-end gap-2">
@@ -74,4 +102,7 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript externo -->
+<script src="{% static 'js/formulario_vehiculo.js' %}"></script>
 {% endblock %}

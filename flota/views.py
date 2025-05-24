@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from .decorators import rol_requerido
 from django.db.models.functions import ExtractYear, ExtractMonth, ExtractDay
+from django.http import JsonResponse
 
 
 def error_403(request, exception):
@@ -24,14 +25,14 @@ def dashboard(request):
     vehiculos_en_taller = Vehiculo.objects.filter(estado='en_mantenimiento').count()
     
     # Mantenimientos
-    preventivos_pendientes = MantenimientoPreventivo.objects.filter(estado='pendiente')
-    correctivos_activos = MantenimientoCorrectivo.objects.exclude(estado__in=['completado', 'cancelado'])
+    preventivos_pendientes = MantenimientoPreventivo.objects.exclude(estado__in=['completado', 'cancelado','en_proceso'])
+    correctivos_activos = MantenimientoCorrectivo.objects.exclude(estado__in=['completado', 'cancelado', 'en_proceso'])
     
     # Próximos mantenimientos (7 días)
     fecha_limite = timezone.now() + timedelta(days=7)
     proximos_mantenimientos = MantenimientoPreventivo.objects.filter(
         fecha_prox_mantenimiento__lte=fecha_limite,
-        estado='pendiente'
+        estado='reportado'
     ).order_by('fecha_prox_mantenimiento')[:5]
     
     # Correctivos recientes
@@ -40,7 +41,7 @@ def dashboard(request):
     # Alertas recientes
     alertas_recientes = []
     hoy = date.today()
-    for mp in MantenimientoPreventivo.objects.filter(estado='pendiente'):
+    for mp in MantenimientoPreventivo.objects.filter(estado='reportado'):
         if mp.fecha_prox_mantenimiento and (mp.fecha_prox_mantenimiento - hoy) <= timedelta(days=3):
             alertas_recientes.append({
                 'titulo': f'Mantenimiento Preventivo: {mp.tipo}',
@@ -143,6 +144,28 @@ def lista_vehiculos(request):
     }
     return render(request, 'flota/vehiculos/lista.html', context)
 
+
+def obtener_datos_vehiculo(request):
+    vehiculo_id = request.GET.get('vehiculo_id')
+    if vehiculo_id:
+        try:
+            vehiculo = Vehiculo.objects.get(id=vehiculo_id)
+            datos = {
+                'marca': vehiculo.marca,
+                'modelo': vehiculo.modelo,
+                'anio': vehiculo.anio,
+                'kilometraje_actual': vehiculo.kilometraje_actual,
+                'fecha_ultimo_mantenimiento': vehiculo.fecha_ultimo_mantenimiento,
+                'tipo': vehiculo.get_tipo_display(),
+                'estado': vehiculo.get_estado_display(),
+                'numero_serie': vehiculo.numero_serie,
+            }
+            return JsonResponse(datos)
+        except Vehiculo.DoesNotExist:
+            return JsonResponse({'error': 'Vehículo no encontrado'}, status=404)
+    return JsonResponse({'error': 'ID no proporcionado'}, status=400)
+
+
 @login_required
 @rol_requerido('administrador', 'supervisor')
 def registrar_vehiculo(request):
@@ -170,20 +193,23 @@ def lista_mantenimientos(request):
     })
 
 
-
 @login_required
 def lista_mantenimientos_preventivos(request):
+
     ESTADOS = {
-        'pendiente': 'Pendiente',
+        'reportado': 'Reportado',
+        'en_proceso': 'En Proceso',
         'completado': 'Completado',
         'cancelado': 'Cancelado',
     }
 
     BADGE_CLASSES = {
-        'pendiente': 'bg-warning text-dark',
+        'reportado': 'bg-primary',
+        'en_proceso': 'bg-warning text-dark',
         'completado': 'bg-success',
         'cancelado': 'bg-danger'
     }
+    
     estado = request.GET.get('estado')
     mantenimientos_qs = MantenimientoPreventivo.objects.select_related('vehiculo', 'usuario_registro').all().order_by('-fecha_registro')
     
@@ -216,6 +242,7 @@ def lista_mantenimientos_preventivos(request):
     }
 
     return render(request, 'flota/mantenimientos/preventivos/lista.html', context)
+
 
 @login_required
 @rol_requerido('administrador', 'supervisor')
@@ -277,6 +304,7 @@ def lista_mantenimientos_correctivos(request):
         'completado': 'Completado',
         'cancelado': 'Cancelado',
     }
+
     BADGE_CLASSES = {
         'reportado': 'bg-primary',
         'en_proceso': 'bg-warning text-dark',
@@ -453,7 +481,7 @@ def alertas(request):
     alertas = []
     
     # Alertas de mantenimiento preventivo (fecha)
-    for mp in MantenimientoPreventivo.objects.filter(estado='pendiente'):
+    for mp in MantenimientoPreventivo.objects.filter(estado='reportado'):
         if mp.fecha_prox_mantenimiento:
             dias_restantes = (mp.fecha_prox_mantenimiento - hoy).days
             if 0 <= dias_restantes <= 7:
@@ -469,7 +497,7 @@ def alertas(request):
                 })
     
     # Alertas de mantenimiento preventivo (kilometraje)
-    for mp in MantenimientoPreventivo.objects.filter(estado='pendiente'):
+    for mp in MantenimientoPreventivo.objects.filter(estado='reportado'):
         if mp.km_prox_mantenimiento and mp.vehiculo.kilometraje_actual:
             km_restantes = mp.km_prox_mantenimiento - mp.vehiculo.kilometraje_actual
             if 0 <= km_restantes <= 500:

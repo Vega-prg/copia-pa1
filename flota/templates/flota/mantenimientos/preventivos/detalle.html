@@ -34,12 +34,8 @@
                         <td>{{ mantenimiento.fecha_prox_mantenimiento|date:"d/m/Y" }}</td>
                     </tr>
                     <tr>
-                        <th>Fecha Realizada</th>
-                        <td>{{ mantenimiento.fecha_realizado|date:"d/m/Y" }}</td>
-                    </tr>
-                    <tr>
                         <th>Observaciones</th>
-                        <td>{{ mantenimiento.observaciones|default:"-" }}</td>
+                        <td>{{ mantenimiento.descripcion }}</td>
                     </tr>
                     <tr>
                         <th>Fecha Registro</th>
@@ -47,7 +43,7 @@
                     </tr>
                     <tr>
                         <th>Registrado por</th>
-                        <td>{{ mantenimiento.usuario_registro.get_full_name }}</td>
+                        <td>{{ mantenimiento.usuario_registro}}</td>
                     </tr>
                 </tbody>
             </table>
